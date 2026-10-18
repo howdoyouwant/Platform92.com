@@ -152,6 +152,8 @@ a{color:inherit;}
 .cattab.active{background:var(--pine);border-color:var(--pine-light);color:var(--ink);}
 .cattab.active svg{color:var(--brass-bright);}
 .cattab:hover:not(.active){border-color:var(--brass);color:var(--ink);}
+.cat-note{background:rgba(201,162,39,.08);border:1px solid var(--line-strong);border-radius:12px;padding:11px 16px;margin:-8px 0 18px;font-size:13.5px;color:var(--ink-dim);line-height:1.45;}
+.cat-note[hidden]{display:none;}
 .menu-grid{display:grid;grid-template-columns:1fr;gap:16px;}
 @media(min-width:680px){.menu-grid{grid-template-columns:1fr 1fr;}}
 @media(min-width:1040px){.menu-grid{grid-template-columns:1fr 1fr 1fr;}}
@@ -170,11 +172,15 @@ a{color:inherit;}
 .dish-price-badge .price-old{color:var(--ink-faint);text-decoration:line-through;text-decoration-thickness:1.5px;margin-inline-end:7px;font-size:12px;}
 .dish-discount-tag{position:absolute;top:9px;left:9px;background:var(--ember);color:#fff;font-family:var(--display);font-size:15px;letter-spacing:.05em;padding:4px 11px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
 [dir="rtl"] .dish-discount-tag{left:auto;right:9px;}
+.dish-pop-tag{position:absolute;top:9px;left:9px;background:var(--brass);color:#1a1508;font-family:var(--display);font-size:12px;letter-spacing:.06em;padding:4px 11px;border-radius:999px;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+[dir="rtl"] .dish-pop-tag{left:auto;right:9px;}
 .dish-body{padding:15px 18px 18px;display:flex;flex-direction:column;gap:9px;flex:1;}
 .dish-name{font-family:var(--serif);font-weight:600;font-size:19px;line-height:1.2;}
+.dish-star{color:var(--brass-bright);margin-inline-end:5px;}
 .dish-desc{color:var(--ink-dim);font-size:13.8px;line-height:1.5;flex:1;}
 .dish-options{display:flex;flex-wrap:wrap;gap:6px;}
 .dish-opt{background:var(--surface-2);border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px;font-family:var(--display);font-size:11px;letter-spacing:.03em;color:var(--ink-dim);text-transform:uppercase;transition:all .15s ease;}
+.dish-opt .opt-delta{opacity:.75;margin-inline-start:5px;}
 .dish-opt.active{background:var(--brass);border-color:var(--brass);color:#1a1508;}
 .dish-opt:hover:not(.active){border-color:var(--brass);color:var(--ink);}
 .dish-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px;}
@@ -402,8 +408,9 @@ a{color:inherit;}
 <!-- ============ MENU ============ -->
 <section class="wrap menu-section" id="menu">
   <div class="section-head"><span class="section-num">PLATFORM 02</span><h2 data-i18n="menu_headline">Menyn</h2></div>
-  <p class="menu-sub" data-i18n="menu_sub">Sju kategorier. Ingen krångel.</p>
+  <p class="menu-sub" data-i18n="menu_sub">Välj kategori och beställ. Ingen krångel.</p>
   <div class="cattabs" id="catTabs" role="tablist"></div>
+  <div class="cat-note" id="catNote" hidden></div>
   <div class="menu-grid" id="menuGrid"></div>
 </section>
 <div class="ties"></div>
@@ -579,8 +586,8 @@ var STR = {
     about_headline:"Ingen krångel. Bara mat.",
     about_body:"God mat, lagad med omtanke. Tack för att du är här.",
     chip1:"Rakt på sak", chip2:"Alla brytningar välkomna", chip3:"Snabbt", chip4:"Varmt, inte fint",
-    menu_headline:"Menyn", menu_sub:"Sju kategorier. Ingen krångel.",
-    add_to_cart:"Lägg till",
+    menu_headline:"Menyn", menu_sub:"Välj kategori och beställ. Ingen krångel.",
+    add_to_cart:"Lägg till", popular:"Populär",
     cart_empty:"Din korg är tom.",
     cart_subtotal:"Delsumma", cart_checkout:"Gå till beställning", cart_clear:"Töm korgen",
     checkout_headline:"Slutför din beställning",
@@ -627,8 +634,8 @@ var STR = {
     about_headline:"No fuss. Just food.",
     about_body:"Good food, made with care. Thank you for being here.",
     chip1:"Straight talk", chip2:"Every accent welcome", chip3:"Fast", chip4:"Warm, not fancy",
-    menu_headline:"The menu", menu_sub:"Seven categories. No fuss.",
-    add_to_cart:"Add",
+    menu_headline:"The menu", menu_sub:"Pick a category and order. No fuss.",
+    add_to_cart:"Add", popular:"Popular",
     cart_empty:"Your cart is empty.",
     cart_subtotal:"Subtotal", cart_checkout:"Go to checkout", cart_clear:"Clear cart",
     checkout_headline:"Finish your order",
@@ -675,8 +682,8 @@ var STR = {
     about_headline:"بلا تعقيد. طعام فقط.",
     about_body:"طعام لذيذ، مُحضَّر بعناية. شكرًا لوجودك هنا.",
     chip1:"كلام واضح", chip2:"كل اللهجات مُرحَّب بها", chip3:"سريع", chip4:"دافئ، لا فخم",
-    menu_headline:"القائمة", menu_sub:"سبع فئات. بلا تعقيد.",
-    add_to_cart:"أضف",
+    menu_headline:"القائمة", menu_sub:"اختر فئة واطلب. بلا تعقيد.",
+    add_to_cart:"أضف", popular:"الأكثر طلبًا",
     cart_empty:"سلتك فارغة.",
     cart_subtotal:"المجموع الفرعي", cart_checkout:"المتابعة للطلب", cart_clear:"إفراغ السلة",
     checkout_headline:"أكمل طلبك",
@@ -716,9 +723,11 @@ var STR = {
 };
 
 /* ============================================================
-   MENU DATA — categories and dishes exactly as on the fixed
-   printed menu. Category order, names, dishes and prices are
-   fixed everywhere; only the language of the copy changes.
+   MENU DATA — synced with the digital menu (categories, dishes,
+   prices, descriptions).
+   PHOTOS: two ways to point an item at a picture
+     image:"Chicken Plate"   -> Photos/Chicken Plate.png          (original website photos)
+     photo:"photosmenu1/a"   -> photosmenu1/a.jpg|jpeg|png|webp   (same references as the digital menu)
    ============================================================ */
 var ICONS = {
   plate:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/>',
@@ -727,22 +736,34 @@ var ICONS = {
   fries:'<path d="M5 20V9M9 20V6M13 20V7M17 20V9"/><path d="M3.5 20h17"/>',
   chicken:'<path d="M9 4c3 0 5 2.4 5 5.2 0 1.7-.8 2.8-1.8 3.8l3.6 5.4a1.6 1.6 0 0 1-2.3 2.2l-4.9-4.6c-2.4-.2-4.6-2.2-4.6-5C4 6.4 6 4 9 4z"/>',
   drink:'<path d="M6 8h12l-1.3 11.2a2 2 0 0 1-2 1.8H9.3a2 2 0 0 1-2-1.8L6 8z"/><path d="M5 8h14"/><path d="M9.5 8 9 4h6l-.5 4"/>',
-  milkshake:'<path d="M7.6 6h8.8l-1.3 13.6a1.8 1.8 0 0 1-1.8 1.6h-2.6a1.8 1.8 0 0 1-1.8-1.6L7.6 6z"/><path d="M7 6h10"/><path d="M14 6l2.6-3.4"/><path d="M9.3 10.6h5.4"/>'
+  milkshake:'<path d="M7.6 6h8.8l-1.3 13.6a1.8 1.8 0 0 1-1.8 1.6h-2.6a1.8 1.8 0 0 1-1.8-1.6L7.6 6z"/><path d="M7 6h10"/><path d="M14 6l2.6-3.4"/><path d="M9.3 10.6h5.4"/>',
+  salad:'<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 11c0-2 1.5-3.5 3-3.5"/><path d="M12 11c0-3 2-5 4-5"/>',
+  pasta:'<path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M8 12c0-4 2-6.5 2-8"/><path d="M12 12c0-4 2-6.5 2-8"/><path d="M16 12c0-3 1-4.5 1-6"/>',
+  paratha:'<circle cx="12" cy="12" r="9"/><path d="M7 9c3 1 7 1 10 0"/><path d="M6.5 13c3.5 1.2 7.5 1.2 11 0"/><path d="M8 17c2.5.8 5.5.8 8 0"/>',
+  extras:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'
 };
 
 var CATEGORIES = [
-  { id:"plates",    icon:"plate",     name:{ sv:"Tallrik", en:"Plates", ar:"أطباق" } },
-  { id:"burgers",   icon:"burger",    name:{ sv:"Hamburgare", en:"Burgers", ar:"برجر" } },
+  { id:"starters",  icon:"chicken",   name:{ sv:"Förrätter", en:"Starters", ar:"مقبلات" } },
+  { id:"plates",    icon:"plate",     name:{ sv:"Tallrikar", en:"Plates", ar:"أطباق" } },
+  { id:"pasta",     icon:"pasta",     name:{ sv:"Pasta", en:"Pasta", ar:"باستا" } },
   { id:"wraps",     icon:"wrap",      name:{ sv:"Rulle", en:"Wraps", ar:"لفائف" } },
+  { id:"burgers",   icon:"burger",    name:{ sv:"Hamburgare", en:"Burgers", ar:"برجر" } },
+  { id:"salad",     icon:"salad",     name:{ sv:"Sallad", en:"Salad", ar:"سلطة" } },
   { id:"fries",     icon:"fries",     name:{ sv:"Pommes frites", en:"Fries", ar:"بطاطس مقلية" } },
-  { id:"chicken",   icon:"chicken",   name:{ sv:"Kyckling / Nuggets", en:"Chicken & Nuggets", ar:"دجاج ونجتس" } },
+  { id:"paratha",   icon:"paratha",   name:{ sv:"Paratha", en:"Paratha", ar:"براتا" },
+    note:{ sv:"Eftermiddagsmeny: vardagar 14:00–17:00, lördag & söndag 12:00–17:00.",
+           en:"Afternoon menu: weekdays 14:00–17:00, Saturday & Sunday 12:00–17:00.",
+           ar:"قائمة بعد الظهر: أيام الأسبوع 14:00–17:00، السبت والأحد 12:00–17:00." } },
+  { id:"drinks",    icon:"drink",     name:{ sv:"Drycker", en:"Drinks", ar:"مشروبات" } },
   { id:"milkshake", icon:"milkshake", name:{ sv:"Milkshake", en:"Milkshakes", ar:"ميلك شيك" } },
-  { id:"drinks",    icon:"drink",     name:{ sv:"Drycker", en:"Drinks", ar:"مشروبات" } }
+  { id:"extras",    icon:"extras",    name:{ sv:"Tillägg", en:"Extras", ar:"إضافات" } }
 ];
 
 /* ---------------------------------------------------------------
-   OPTION SETS — every place the menu text said "X eller Y" is now
-   a real selectable choice, tracked per order, not just wording.
+   OPTION SETS — every place the menu text said "X eller Y" is a
+   real selectable choice, tracked per order. A choice can carry
+   its own "price" (used for the "plain / with cheese" items).
    --------------------------------------------------------------- */
 var OPT_STARCH = { key:"starch", choices:[
   {id:"rice",  label:{sv:"Ris",en:"Rice",ar:"أرز"}},
@@ -752,13 +773,21 @@ var OPT_CHEESE = { key:"cheese", choices:[
   {id:"with",    label:{sv:"Med ost",en:"With cheese",ar:"مع جبن"}},
   {id:"without", label:{sv:"Utan ost",en:"No cheese",ar:"بدون جبن"}}
 ]};
-var OPT_EXTRA = { key:"extra", choices:[
-  {id:"cheese", label:{sv:"Ost",en:"Cheese",ar:"جبن"}},
-  {id:"dips",   label:{sv:"Dips",en:"Dips",ar:"صلصات"}}
+function optCheesePrice(plain, withCheese){
+  return { key:"cheese", choices:[
+    {id:"without", label:{sv:"Utan ost",en:"No cheese",ar:"بدون جبن"}, price:plain},
+    {id:"with",    label:{sv:"Med ost",en:"With cheese",ar:"مع جبن"}, price:withCheese}
+  ]};
+}
+var OPT_SALAD = { key:"salad", choices:[
+  {id:"chicken-plain",  label:{sv:"Kyckling, utan ost",en:"Chicken, no cheese",ar:"دجاج، بدون جبن"}, price:69},
+  {id:"chicken-cheese", label:{sv:"Kyckling, med ost",en:"Chicken, with cheese",ar:"دجاج، مع جبن"}, price:99},
+  {id:"beef-plain",     label:{sv:"Nötkött, utan ost",en:"Beef, no cheese",ar:"لحم بقري، بدون جبن"}, price:69},
+  {id:"beef-cheese",    label:{sv:"Nötkött, med ost",en:"Beef, with cheese",ar:"لحم بقري، مع جبن"}, price:99}
 ]};
-var OPT_WRAPFILL = { key:"fill", choices:[
-  {id:"fries",   label:{sv:"Pommes",en:"Fries",ar:"بطاطس"}},
-  {id:"falafel", label:{sv:"Falafel",en:"Falafel",ar:"فلافل"}}
+var OPT_MEAT = { key:"meat", choices:[
+  {id:"chicken", label:{sv:"Kyckling",en:"Chicken",ar:"دجاج"}},
+  {id:"beef",    label:{sv:"Nötkött",en:"Beef",ar:"لحم بقري"}}
 ]};
 var OPT_DRINK = { key:"drink", choices:[
   {id:"soda",   label:{sv:"Läsk",en:"Soda",ar:"مشروب غازي"}},
@@ -767,60 +796,118 @@ var OPT_DRINK = { key:"drink", choices:[
 ]};
 
 var MENU = [
-  { id:"p1", cat:"plates", price:99, image:"Chicken Plate", options:OPT_STARCH, name:{sv:"Kyckling med ris eller pommes",en:"Chicken with rice or fries",ar:"دجاج مع أرز أو بطاطس"},
-    desc:{sv:"Grillad kyckling serverad med basmatiris eller pommes samt valfri sallad.",en:"Grilled chicken served with basmati rice or fries, plus a salad of your choice.",ar:"دجاج مشوي يُقدَّم مع أرز بسمتي أو بطاطس، وسلطة حسب اختيارك."}},
-  { id:"p2", cat:"plates", price:99, image:"Beef Plate", options:OPT_STARCH, name:{sv:"Nötkött med ris eller pommes",en:"Beef with rice or fries",ar:"لحم بقري مع أرز أو بطاطس"},
-    desc:{sv:"Kryddat nötkött serverat med basmatiris eller pommes samt valfri sallad.",en:"Spiced beef served with basmati rice or fries, plus a salad of your choice.",ar:"لحم بقري متبّل يُقدَّم مع أرز بسمتي أو بطاطس، وسلطة حسب اختيارك."}},
-  { id:"p3", cat:"plates", price:109, image:"Beef & Chicken Combo Plate", options:OPT_STARCH, name:{sv:"Nötkött och kyckling (Combo)",en:"Beef and chicken (Combo)",ar:"لحم بقري ودجاج (كومبو)"},
-    desc:{sv:"Grillad kyckling och kryddat nötkött med basmatiris eller pommes samt valfri sallad.",en:"Grilled chicken and spiced beef with basmati rice or fries, plus a salad of your choice.",ar:"دجاج مشوي ولحم بقري متبّل مع أرز بسمتي أو بطاطس، وسلطة حسب اختيارك."}},
-  { id:"p4", cat:"plates", price:119, image:"Fish Plate", options:OPT_STARCH, name:{sv:"Fisk med ris eller pommes",en:"Fish with rice or fries",ar:"سمك مع أرز أو بطاطس"},
-    desc:{sv:"Panerad fiskfilé serverad med basmatiris eller pommes samt valfri sallad.",en:"Breaded fish fillet served with basmati rice or fries, plus a salad of your choice.",ar:"فيليه سمك مقرمش يُقدَّم مع أرز بسمتي أو بطاطس، وسلطة حسب اختيارك."}},
-  { id:"p5", cat:"plates", price:79, image:"Falafel Plate", options:OPT_STARCH, name:{sv:"Falafel med ris eller pommes",en:"Falafel with rice or fries",ar:"فلافل مع أرز أو بطاطس"},
-    desc:{sv:"Krispiga falaflar serverade med basmatiris eller pommes samt valfri sallad.",en:"Crispy falafel served with basmati rice or fries, plus a salad of your choice.",ar:"فلافل مقرمشة تُقدَّم مع أرز بسمتي أو بطاطس، وسلطة حسب اختيارك."}},
-  { id:"p6", cat:"plates", price:119, image:"krispigkyckling", options:OPT_STARCH, name:{sv:"Krispig kyckling",en:"Crispy chicken",ar:"دجاج مقرمش"},
-    desc:{sv:"Krispig kyckling serverad med basmatiris eller pommes samt valfri sallad.",en:"Crispy chicken served with basmati rice or fries, plus a salad of your choice.",ar:"دجاج مقرمش يُقدَّم مع أرز بسمتي أو بطاطس، وسلطة حسب اختيارك."}},
+  /* ---------- FÖRRÄTTER / STARTERS ---------- */
+  { id:"s1", cat:"starters", price:89, photo:"photosmenu1/a", name:{sv:"Kyckling 65",en:"Chicken 65",ar:"دجاج 65"},
+    desc:{sv:"Krispigt marinerad kyckling med indiska kryddor, friterad till perfektion och serverad",en:"Crispy marinated chicken with Indian spices, deep-fried to perfection and served",ar:"دجاج متبّل ومقرمش بالتوابل الهندية، مقلي بإتقان ويُقدَّم"}},
+  { id:"c1", cat:"starters", price:49, image:"nuggets", name:{sv:"Nuggets",en:"Nuggets",ar:"ناجتس"},
+    desc:{sv:"Krispiga, med mild dippsås.",en:"Crispy, with mild dipping sauce.",ar:"مقرمش، مع صلصة غمس خفيفة."}},
+  { id:"c2", cat:"starters", price:49, image:"wings", name:{sv:"Kycklingvingar",en:"Chicken wings",ar:"أجنحة الدجاج"},
+    desc:{sv:"Saftiga & krispiga, med mild dippsås.",en:"Juicy & crispy, with mild dipping sauce.",ar:"طري ومقرمش، مع صلصة غمس خفيفة."}},
 
+  /* ---------- TALLRIKAR / PLATES ---------- */
+  { id:"p1", cat:"plates", price:109, image:"Chicken Plate", options:OPT_STARCH, name:{sv:"Grillad Kyckling",en:"Grilled chicken",ar:"دجاج مشوي"},
+    desc:{sv:"Grillad kyckling, med ris eller pommes & sallad.",en:"Grilled chicken, with rice or fries & salad.",ar:"دجاج مشوي، مع الأرز أو البطاطس والسلطة."}},
+  { id:"p6", cat:"plates", price:109, image:"krispigkyckling", options:OPT_STARCH, pop:true, name:{sv:"Krispig kyckling",en:"Crispy chicken",ar:"دجاج مقرمش"},
+    desc:{sv:"Krispig kyckling, med ris eller pommes & sallad.",en:"Crispy chicken, with rice or fries & salad.",ar:"دجاج مقرمش، مع الأرز أو البطاطس والسلطة."}},
+  { id:"p2", cat:"plates", price:119, image:"Beef Plate", options:OPT_STARCH, name:{sv:"Smash Nötkött",en:"Smash beef",ar:"لحم بقري سماش"},
+    desc:{sv:"Kryddat nötkött, med ris/pommes & sallad.",en:"Spiced beef, with rice/fries & salad.",ar:"لحم بقري متبّل، مع الأرز أو البطاطس والسلطة."}},
+  { id:"p3", cat:"plates", price:119, image:"Beef & Chicken Combo Plate", options:OPT_STARCH, pop:true, name:{sv:"Combo (Nöt & Kyckling)",en:"Combo (beef & chicken)",ar:"كومبو (لحم بقري ودجاج)"},
+    desc:{sv:"Grillad kyckling & kryddat nötkött, med ris eller pommes & sallad.",en:"Grilled chicken & spiced beef, with rice or fries & salad.",ar:"دجاج مشوي ولحم بقري متبّل، مع الأرز أو البطاطس والسلطة."}},
+  { id:"p4", cat:"plates", price:119, image:"Fish Plate", options:OPT_STARCH, pop:true, name:{sv:"Fisk",en:"Fish",ar:"سمك"},
+    desc:{sv:"Panerad fiskfilé, med ris eller pommes & sallad.",en:"Breaded fish fillet, with rice or fries & salad.",ar:"فيليه سمك مقرمش، مع الأرز أو البطاطس والسلطة."}},
+  { id:"p5", cat:"plates", price:79, image:"Falafel Plate", options:OPT_STARCH, name:{sv:"Falafel",en:"Falafel",ar:"فلافل"},
+    desc:{sv:"Krispiga falafflar, med ris eller pommes & sallad.",en:"Crispy falafel, with rice or fries & salad.",ar:"فلافل مقرمشة، مع الأرز أو البطاطس والسلطة."}},
+
+  /* ---------- PASTA ---------- */
+  { id:"pa1", cat:"pasta", price:119, photo:"photosmenu3/1", name:{sv:"Kycklingpasta",en:"Chicken pasta",ar:"باستا بالدجاج"},
+    desc:{sv:"Pasta med kyckling, röd sås, örter och ost.",en:"Pasta with chicken, red sauce, herbs and cheese.",ar:"باستا مع الدجاج وصلصة حمراء وأعشاب وجبنة."}},
+  { id:"pa2", cat:"pasta", price:119, photo:"photosmenu3/2", name:{sv:"Nötfärspasta",en:"Minced beef pasta",ar:"باستا بلحم البقر المفروم"},
+    desc:{sv:"Pasta med nötkött, röd sås, örter och ost.",en:"Pasta with beef, red sauce, herbs and cheese.",ar:"باستا مع اللحم البقري وصلصة حمراء وأعشاب وجبنة."}},
+  { id:"pa3", cat:"pasta", price:129, photo:"photosmenu3/3", feat:true, name:{sv:"Combo Pasta Tallrik",en:"Combo pasta plate",ar:"طبق باستا كومبو"},
+    desc:{sv:"Pasta med kyckling och nötkött, röd sås, färska grönsaker och ost.",en:"Pasta with chicken and beef, red sauce, fresh vegetables and cheese.",ar:"باستا مع الدجاج واللحم البقري وصلصة حمراء وخضار طازجة وجبنة."}},
+  { id:"pa4", cat:"pasta", price:119, photo:"photosmenu3/4", name:{sv:"Vegetarisk Pasta",en:"Vegetarian pasta",ar:"باستا نباتية"},
+    desc:{sv:"Pasta med färska grönsaker, röd sås, örter och ost.",en:"Pasta with fresh vegetables, red sauce, herbs and cheese.",ar:"باستا مع خضار طازجة وصلصة حمراء وأعشاب وجبنة."}},
+  { id:"pa5", cat:"pasta", price:129, photo:"photosmenu3/5", name:{sv:"Räkpasta",en:"Shrimp pasta",ar:"باستا بالروبيان"},
+    desc:{sv:"Pasta med räkor, röd sås, örter och ost.",en:"Pasta with shrimp, red sauce, herbs and cheese.",ar:"باستا مع الروبيان وصلصة حمراء وأعشاب وجبنة."}},
+
+  /* ---------- RULLE / WRAPS  (plain / with cheese) ---------- */
+  { id:"w1", cat:"wraps", price:109, image:"Beef Wrap", options:optCheesePrice(109,129), name:{sv:"Nötkött rulle",en:"Beef wrap",ar:"لفافة لحم بقري"},
+    desc:{sv:"Kryddat nötkött i varmt pitabröd med sallad & mild sås.",en:"Spiced beef in warm pita bread with salad & mild sauce.",ar:"لحم بقري متبّل في خبز بيتا دافئ مع السلطة وصلصة خفيفة."}},
+  { id:"w2", cat:"wraps", price:109, image:"Chicken wrap", options:optCheesePrice(109,129), name:{sv:"Kyckling rulle",en:"Chicken wrap",ar:"لفافة دجاج"},
+    desc:{sv:"Grillad kyckling i varmt pitabröd med sallad.",en:"Grilled chicken in warm pita bread with salad.",ar:"دجاج مشوي في خبز بيتا دافئ مع السلطة."}},
+  { id:"w3", cat:"wraps", price:79, image:"Fries or Falafel Wrap", options:optCheesePrice(79,109), name:{sv:"Falafel rulle",en:"Falafel wrap",ar:"لفافة فلافل"},
+    desc:{sv:"Falafel med färska grönsaker.",en:"Falafel with fresh vegetables.",ar:"فلافل مع خضار طازجة."}},
+  { id:"w4", cat:"wraps", price:109, photo:"photosmenu1/f", options:optCheesePrice(109,129), name:{sv:"Combo rulle",en:"Combo wrap",ar:"لفافة كومبو"},
+    desc:{sv:"Grillad kyckling & kryddat nötkött i varmt pitabröd med sallad & mild sås.",en:"Grilled chicken & spiced beef in warm pita bread with salad & mild sauce.",ar:"دجاج مشوي ولحم بقري متبّل في خبز بيتا دافئ مع السلطة وصلصة خفيفة."}},
+
+  /* ---------- HAMBURGARE / BURGERS ---------- */
   { id:"b1", cat:"burgers", price:119, image:"Cheeseburger", options:OPT_CHEESE, name:{sv:"Cheeseburgare",en:"Cheeseburger",ar:"تشيز برجر"},
-    desc:{sv:"Nötköttsburgare grillad till perfektion, toppad med en smält skiva amerikansk ost. Eller utan ost.",en:"Beef patty grilled to perfection, topped with a melted slice of American cheese. Or without cheese.",ar:"قرص لحم بقري مشوي بإتقان مع شريحة جبن أمريكي ذائب، أو بدون جبن."}},
-  { id:"b2", cat:"burgers", price:99, image:"Crispy Chicken Cheeseburger", options:OPT_CHEESE, name:{sv:"Krispig kyckling-cheeseburgare",en:"Crispy chicken cheeseburger",ar:"برجر دجاج مقرمش بالجبن"},
-    desc:{sv:"Kycklingfilé av helt vitt kött, krispigt friterad till gyllene perfektion. Med smält ost eller utan.",en:"All-white-meat chicken fillet, fried crispy to golden perfection. With melted cheese or without.",ar:"فيليه دجاج أبيض بالكامل، مقلي حتى يصبح مقرمشًا وذهبيًا. مع جبن ذائب أو بدونه."}},
-  { id:"b3", cat:"burgers", price:69, image:"Mixed Salad", name:{sv:"Mixed Sallad",en:"Mixed Salad",ar:"سلطة مشكلة"},
-    desc:{sv:"Fräsch sallad med isbergssallad, gurka, tomat, kikärtor och röda kidneybönor. Serveras med valfri dressing.",en:"Crisp salad with iceberg lettuce, cucumber, tomato, chickpeas and red kidney beans. Served with a dressing of your choice.",ar:"سلطة طازجة بالخس الأيسبرغ، الخيار، الطماطم، الحمص وحبوب الفاصولياء الحمراء، مع صلصة حسب اختيارك."}},
-  { id:"b4", cat:"burgers", price:19, options:OPT_EXTRA, name:{sv:"Extras",en:"Extras",ar:"إضافات"},
-    desc:{sv:"Extra ost eller dips.",en:"Extra cheese or dips.",ar:"جبن إضافي أو صلصات."}},
+    desc:{sv:"Nötköttsburgare grillad till perfektion, toppad med smält ost, serveras med pommes.",en:"Beef burger grilled to perfection, topped with melted cheese, served with fries.",ar:"برغر لحم بقري مشوي بإتقان، مغطى بجبنة ذائبة، يُقدَّم مع البطاطس."}},
+  { id:"b2", cat:"burgers", price:119, image:"Crispy Chicken Cheeseburger", options:OPT_CHEESE, name:{sv:"Krispig kyckling-cheeseburgare",en:"Crispy chicken cheeseburger",ar:"تشيز برجر دجاج مقرمش"},
+    desc:{sv:"Krispigt friterad till gyllene perfektion, med smält ost, serveras med pommes.",en:"Crispy chicken fried to golden perfection, with melted cheese, served with fries.",ar:"دجاج مقرمش مقلي حتى يصبح ذهبياً، مع جبنة ذائبة، يُقدَّم مع البطاطس."}},
+  { id:"b5", cat:"burgers", price:119, photo:"photosmenu1/12", name:{sv:"Fisk Burger",en:"Fish burger",ar:"برجر السمك"},
+    desc:{sv:"Fiskburgare, serveras med pommes.",en:"Fish burger, served with fries.",ar:"برغر سمك، يُقدَّم مع البطاطس."}},
+  { id:"b6", cat:"burgers", price:59, photo:"photosmenu1/b", name:{sv:"Bon Burger",en:"Bon Burger",ar:"Bon Burger"},
+    desc:{sv:"Nötköttsburgare grillad till perfektion.",en:"Beef burger grilled to perfection.",ar:"برغر لحم بقري مشوي بإتقان."}},
+  { id:"b7", cat:"burgers", price:109, photo:"photosmenu1/i", name:{sv:"Halloumi Burger (Veg)",en:"Halloumi burger (veg)",ar:"برجر حلومي (نباتي)"},
+    desc:{sv:"Grillad halloumi med färska grönsaker.",en:"Grilled halloumi with fresh vegetables.",ar:"حلوم مشوي مع خضار طازجة."}},
 
-  { id:"w1", cat:"wraps", price:109, image:"Beef Wrap", name:{sv:"Nötkött rulle",en:"Beef wrap",ar:"لفائف لحم بقري"},
-    desc:{sv:"Kryddat nötkött i varmt pitabröd med sallad och valfri sås.",en:"Spiced beef in warm pita bread with salad and a sauce of your choice.",ar:"لحم بقري متبّل في خبز البيتا الدافئ مع سلطة وصلصة حسب اختيارك."}},
-  { id:"w2", cat:"wraps", price:99, image:"Chicken wrap", name:{sv:"Kyckling rulle",en:"Chicken wrap",ar:"لفائف دجاج"},
-    desc:{sv:"Grillad kyckling i varmt pitabröd med sallad och valfri sås.",en:"Grilled chicken in warm pita bread with salad and a sauce of your choice.",ar:"دجاج مشوي في خبز البيتا الدافئ مع سلطة وصلصة حسب اختيارك."}},
-  { id:"w3", cat:"wraps", price:79, image:"Fries or Falafel Wrap", options:OPT_WRAPFILL, name:{sv:"Pommes eller falafel rulle",en:"Fries or falafel wrap",ar:"لفائف بطاطس أو فلافل"},
-    desc:{sv:"Krispiga pommes eller falafel med färska grönsaker och valfri sås.",en:"Crispy fries or falafel with fresh vegetables and a sauce of your choice.",ar:"بطاطس مقرمشة أو فلافل مع خضروات طازجة وصلصة حسب اختيارك."}},
+  /* ---------- SALLAD / SALAD ---------- */
+  { id:"b3", cat:"salad", price:69, image:"Mixed Salad", options:OPT_SALAD, name:{sv:"Mixed Sallad",en:"Mixed salad",ar:"سلطة مشكلة"},
+    desc:{sv:"Kyckling / Nötkött, Isbergssallad, Fetaost, gurka, tomat, med mild dressing.",en:"Chicken / Beef, iceberg lettuce, feta cheese, cucumber, tomato, with mild dressing.",ar:"دجاج / لحم بقري، خس آيسبرغ، جبنة فيتا، خيار، طماطم، مع صلصة خفيفة."}},
+  { id:"sa2", cat:"salad", price:99, photo:"photosmenu1/h", name:{sv:"Fetaostsallad",en:"Feta salad",ar:"سلطة جبن الفيتا"},
+    desc:{sv:"Isbergssallad, fetaost, gurka och tomat, med mild dressing.",en:"Iceberg lettuce, feta cheese, cucumber and tomato, with mild dressing.",ar:"خس آيسبرغ وجبنة فيتا وخيار وطماطم، مع صلصة خفيفة."}},
 
-  { id:"f1", cat:"fries", price:79, image:"Loaded Fries", name:{sv:"Loaded Pommes",en:"Loaded fries",ar:"بطاطس محمّلة"},
-    desc:{sv:"Krispiga pommes toppade med valfri dressing.",en:"Crispy fries topped with a dressing of your choice.",ar:"بطاطس مقرمشة مغطاة بصلصة حسب اختيارك."}},
-  { id:"f2", cat:"fries", price:59, image:"Cheese Fries", name:{sv:"Pommes frites med ost",en:"Cheese fries",ar:"بطاطس بالجبن"},
-    desc:{sv:"Krispiga pommes toppade med smält ost.",en:"Crispy fries topped with melted cheese.",ar:"بطاطس مقرمشة مغطاة بجبن ذائب."}},
+  /* ---------- POMMES FRITES / FRIES ---------- */
+  { id:"f3", cat:"fries", price:39, photo:"photosmenu1/14", name:{sv:"Pommes",en:"Fries",ar:"بطاطس مقلية"},
+    desc:{sv:"Krispiga pommes.",en:"Crispy fries.",ar:"بطاطس مقلية مقرمشة."}},
+  { id:"f1", cat:"fries", price:49, image:"Loaded Fries", name:{sv:"Loaded Pommes",en:"Loaded fries",ar:"بطاطس مقلية محمّلة"},
+    desc:{sv:"Krispiga pommes toppade med valfri dressing.",en:"Crispy fries topped with your choice of dressing.",ar:"بطاطس مقلية مقرمشة مع صلصة من اختيارك."}},
+  { id:"f2", cat:"fries", price:59, image:"Cheese Fries", name:{sv:"Pommes med ost",en:"Fries with cheese",ar:"بطاطس مقلية بالجبن"},
+    desc:{sv:"Krispiga pommes/falafel med färska grönsaker & valfri sås.",en:"Crispy fries/falafel with fresh vegetables & your choice of sauce.",ar:"بطاطس مقلية/فلافل مقرمشة مع خضار طازجة وصلصة من اختيارك."}},
+  { id:"f4", cat:"fries", price:49, photo:"photosmenu1/c", name:{sv:"Chilimayo Pommes",en:"Chili mayo fries",ar:"بطاطس مقلية بمايونيز الفلفل"},
+    desc:{sv:"Krispiga pommes med chilimayo.",en:"Crispy fries with chili mayo.",ar:"بطاطس مقلية مقرمشة مع مايونيز الفلفل الحار."}},
 
-  { id:"c1", cat:"chicken", price:49, image:"nuggets", name:{sv:"Kycklingnuggets",en:"Chicken nuggets",ar:"ناغتس دجاج"},
-    desc:{sv:"Krispiga nuggets serverade med valfri dippsås.",en:"Crispy nuggets served with a dipping sauce of your choice.",ar:"قطع دجاج مقرمشة تُقدَّم مع صلصة غمس حسب اختيارك."}},
-  { id:"c2", cat:"chicken", price:49, image:"wings", name:{sv:"Kycklingvingar",en:"Chicken wings",ar:"أجنحة دجاج"},
-    desc:{sv:"Saftiga och krispiga kycklingvingar med valfri dippsås.",en:"Juicy, crispy chicken wings with a dipping sauce of your choice.",ar:"أجنحة دجاج طرية ومقرمشة مع صلصة غمس حسب اختيارك."}},
+  /* ---------- PARATHA (afternoon menu) ---------- */
+  { id:"par1", cat:"paratha", price:89, photo:"photosmenu2/1", name:{sv:"Ost Paratha",en:"Cheese paratha",ar:"براتا بالجبن"},
+    desc:{sv:"Varm, flagig paratha fylld med smält ost.",en:"Warm, flaky paratha filled with melted cheese.",ar:"براتا دافئة مقرمشة محشوة بالجبنة الذائبة."}},
+  { id:"par2", cat:"paratha", price:89, photo:"photosmenu2/2", name:{sv:"Aloo (Smash potatis) Ost Paratha",en:"Aloo (smashed potato) cheese paratha",ar:"براتا بالبطاطس المهروسة والجبن"},
+    desc:{sv:"Paratha fylld med kryddad potatis och smält ost.",en:"Paratha filled with spiced potato and melted cheese.",ar:"براتا محشوة بالبطاطس المتبلة والجبنة الذائبة."}},
+  { id:"par3", cat:"paratha", price:99, photo:"photosmenu2/3", name:{sv:"Kyckling Ost Paratha",en:"Chicken cheese paratha",ar:"براتا بالدجاج والجبن"},
+    desc:{sv:"Paratha fylld med kryddad kyckling och smält ost.",en:"Paratha filled with spiced chicken and melted cheese.",ar:"براتا محشوة بالدجاج المتبل والجبنة الذائبة."}},
+  { id:"par4", cat:"paratha", price:99, photo:"photosmenu2/4", name:{sv:"Nötfärs Ost Paratha",en:"Minced beef cheese paratha",ar:"براتا بلحم البقر المفروم والجبن"},
+    desc:{sv:"Paratha fylld med kryddad nötfärs och smält ost.",en:"Paratha filled with spiced minced beef and melted cheese.",ar:"براتا محشوة باللحم المفروم المتبل والجبنة الذائبة."}},
+  { id:"par5", cat:"paratha", price:119, photo:"photosmenu2/5", feat:true, name:{sv:"Platform92 Special Paratha",en:"Platform92 Special Paratha",ar:"براتا بلاتفورم92 الخاصة"},
+    desc:{sv:"Husets specialparatha med extra fyllning och smält ost.",en:"Our house special paratha with extra filling and melted cheese.",ar:"براتا السبيشل الخاصة بنا بحشوة إضافية وجبنة ذائبة."}},
+  { id:"par6", cat:"paratha", info:true, photo:"photosmenu2/7", name:{sv:"Te, kaffe + snacks",en:"Tea, coffee + snacks",ar:"شاي وقهوة + وجبات خفيفة"}},
+  { id:"par7", cat:"paratha", price:19, name:{sv:"Extra kött eller kyckling (Paratha)",en:"Extra meat or chicken (Paratha)",ar:"لحم أو دجاج إضافي (براتا)"}},
+  { id:"par8", cat:"paratha", price:10, name:{sv:"Extra ost (Paratha)",en:"Extra cheese (Paratha)",ar:"جبن إضافي (براتا)"}},
 
-  { id:"d1", cat:"drinks", price:29, image:"coca cola", options:OPT_DRINK, name:{sv:"Läsk / Kaffe / Te",en:"Soda / Coffee / Tea",ar:"مشروب غازي / قهوة / شاي"},
-    desc:{sv:"Välj mellan iskall läsk, varmt kaffe eller te.",en:"Choose between ice-cold soda, hot coffee or tea.",ar:"اختر بين مشروب غازي بارد، قهوة ساخنة أو شاي."}},
+  /* ---------- DRYCKER / DRINKS ---------- */
+  { id:"d1", cat:"drinks", price:25, image:"coca cola", options:OPT_DRINK, name:{sv:"Dryck",en:"Drink",ar:"مشروب"},
+    desc:{sv:"Välj mellan läsk, kaffe/te, serveras iskallt/varmt efter val.",en:"Choose between soda, coffee/tea, served cold/hot as you prefer.",ar:"اختر بين المشروبات الغازية والقهوة/الشاي، تُقدَّم باردة/ساخنة حسب الرغبة."}},
 
-  { id:"ms1", cat:"milkshake", price:39, oldPrice:49, image:"Banana Shake", name:{sv:"Bananshaké",en:"Banana Shake",ar:"ميلك شيك الموز"},
+  /* ---------- MILKSHAKES ---------- */
+  { id:"ms1", cat:"milkshake", price:49, image:"Banana Shake", name:{sv:"Bananshaké",en:"Banana Shake",ar:"ميلك شيك الموز"},
     desc:{sv:"Krämig milkshake gjord på mogen banan.",en:"Creamy milkshake made with ripe banana.",ar:"ميلك شيك كريمي بطعم الموز الناضج."}},
-  { id:"ms2", cat:"milkshake", price:39, oldPrice:49, image:"Strawberry Shake", name:{sv:"Jordgubbsshaké",en:"Strawberry Shake",ar:"ميلك شيك الفراولة"},
+  { id:"ms2", cat:"milkshake", price:49, image:"Strawberry Shake", name:{sv:"Jordgubbsshaké",en:"Strawberry Shake",ar:"ميلك شيك الفراولة"},
     desc:{sv:"Krämig milkshake med söta jordgubbar.",en:"Creamy milkshake with sweet strawberries.",ar:"ميلك شيك كريمي بالفراولة الحلوة."}},
-  { id:"ms3", cat:"milkshake", price:39, oldPrice:49, image:"Mixed Berry Shake", name:{sv:"Blandade Bär-shaké",en:"Mixed Berry Shake",ar:"ميلك شيك التوت المشكل"},
+  { id:"ms3", cat:"milkshake", price:49, image:"Mixed Berry Shake", name:{sv:"Blandade Bär-shaké",en:"Mixed Berry Shake",ar:"ميلك شيك التوت المشكل"},
     desc:{sv:"Krämig milkshake med en mix av bär.",en:"Creamy milkshake with a mix of berries.",ar:"ميلك شيك كريمي بخليط من التوت."}},
-  { id:"ms4", cat:"milkshake", price:39, oldPrice:49, image:"Banana Date Shake", name:{sv:"Banan- och dadelshaké",en:"Banana & Date Shake",ar:"ميلك شيك الموز والتمر"},
+  { id:"ms4", cat:"milkshake", price:49, image:"Banana Date Shake", name:{sv:"Banan- och dadelshaké",en:"Banana & Date Shake",ar:"ميلك شيك الموز والتمر"},
     desc:{sv:"Krämig milkshake med banan och söta dadlar.",en:"Creamy milkshake with banana and sweet dates.",ar:"ميلك شيك كريمي بالموز والتمر الحلو."}},
-  { id:"ms5", cat:"milkshake", price:39, oldPrice:49, image:"Mango Shake", name:{sv:"Mangoshaké",en:"Mango Shake",ar:"ميلك شيك المانجو"},
+  { id:"ms5", cat:"milkshake", price:49, image:"Mango Shake", name:{sv:"Mangoshaké",en:"Mango Shake",ar:"ميلك شيك المانجو"},
     desc:{sv:"Krämig milkshake med solmogen mango.",en:"Creamy milkshake with sun-ripened mango.",ar:"ميلك شيك كريمي بالمانجو الناضجة."}},
-  { id:"ms6", cat:"milkshake", price:39, oldPrice:49, image:"Oreo Shake", name:{sv:"Oreo Shaké",en:"Oreo Shake",ar:"ميلك شيك أوريو"},
-    desc:{sv:"Krämig milkshake med krossade Oreo-kakor.",en:"Creamy milkshake with crushed Oreo cookies.",ar:"ميلك شيك كريمي مع قطع بسكويت أوريو مطحونة."}}
+  { id:"ms6", cat:"milkshake", price:49, image:"Oreo Shake", name:{sv:"Oreo Shaké",en:"Oreo Shake",ar:"ميلك شيك أوريو"},
+    desc:{sv:"Krämig milkshake med krossade Oreo-kakor.",en:"Creamy milkshake with crushed Oreo cookies.",ar:"ميلك شيك كريمي مع قطع بسكويت أوريو مطحونة."}},
+
+  /* ---------- TILLÄGG / EXTRAS ---------- */
+  { id:"x1", cat:"extras", price:10, name:{sv:"Extra dipp",en:"Extra dip",ar:"صلصة إضافية"},
+    desc:{sv:"Valfri dipsås till din måltid.",en:"Any dipping sauce with your meal.",ar:"أي صلصة غمس مع وجبتك."}},
+  { id:"x2", cat:"extras", price:20, options:OPT_MEAT, name:{sv:"Extra kött",en:"Extra meat",ar:"لحم إضافي"},
+    desc:{sv:"Lägg till valfritt kött: kyckling eller nötkött.",en:"Add any meat: chicken or beef.",ar:"أضف أي لحم: دجاج أو لحم بقري."}},
+  { id:"x3", cat:"extras", price:10, name:{sv:"Extra ost",en:"Extra cheese",ar:"جبن إضافي"},
+    desc:{sv:"Lägg till extra smält ost.",en:"Add extra melted cheese.",ar:"أضف جبنة ذائبة إضافية."}}
 ];
 
 /* ============================================================
@@ -963,6 +1050,7 @@ function t(key){
   return d[key]!==undefined ? d[key] : (STR.sv[key]||key);
 }
 function fmt(n){ return n+" kr"; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function findItem(id){ return MENU.filter(function(m){return m.id===id;})[0]; }
 function findCat(id){ return CATEGORIES.filter(function(c){return c.id===id;})[0]; }
 
@@ -980,12 +1068,21 @@ function getChoiceLabel(item, choiceId){
   var match = item.options.choices.filter(function(c){ return c.id===choiceId; })[0];
   return match ? match.label[state.lang] : null;
 }
+/* price of one unit: a choice can override the dish's base price (plain / with cheese) */
+function unitPrice(item, choiceId){
+  if(item && item.options && choiceId){
+    var match = item.options.choices.filter(function(c){ return c.id===choiceId; })[0];
+    if(match && match.price!=null) return match.price;
+  }
+  return item ? item.price : 0;
+}
 function cartCount(){
   return Object.keys(state.cart).reduce(function(sum,key){return sum+state.cart[key];},0);
 }
 function cartTotal(){
   return Object.keys(state.cart).reduce(function(sum,key){
-    var item=findItem(parseCartKey(key).itemId); return sum + (item?item.price*state.cart[key]:0);
+    var parsed=parseCartKey(key);
+    var item=findItem(parsed.itemId); return sum + (item?unitPrice(item,parsed.choiceId)*state.cart[key]:0);
   },0);
 }
 function deliveryFee(){
@@ -1006,6 +1103,7 @@ function meetsMinOrder(){
 
 /* ---------- DOM refs ---------- */
 var catTabsEl = document.getElementById("catTabs");
+var catNoteEl = document.getElementById("catNote");
 var menuGridEl = document.getElementById("menuGrid");
 var cartOverlay = document.getElementById("cartOverlay");
 var cartDrawer = document.getElementById("cartDrawer");
@@ -1018,6 +1116,32 @@ var mobileNav = document.getElementById("mobileNav");
 var hamburgerBtn = document.getElementById("hamburgerBtn");
 var fieldPostcodeEl = document.getElementById("fieldPostcode");
 var custPostcodeInput = document.getElementById("custPostcode");
+
+/* ---------- photos from the digital-menu folders (photosmenu1/2/3): try jpg, jpeg, png, webp ---------- */
+var PHOTO_EXTS = ["jpg","jpeg","png","webp"];
+var photoPref = 0; // remembers which extension worked last, so most photos load on the first try
+function photoUrl(ref, ext){
+  return ref.split("/").map(encodeURIComponent).join("/")+"."+ext;
+}
+menuGridEl.addEventListener("load", function(e){
+  var img = e.target;
+  if(!img || img.tagName!=="IMG" || !img.dataset.photo) return;
+  var m = (img.getAttribute("src")||"").match(/\.(\w+)$/);
+  if(m){ var i = PHOTO_EXTS.indexOf(m[1]); if(i>-1) photoPref = i; }
+}, true);
+menuGridEl.addEventListener("error", function(e){
+  var img = e.target;
+  if(!img || img.tagName!=="IMG" || !img.dataset.photo) return;
+  var tried = parseInt(img.dataset.n||"1",10);
+  if(tried<PHOTO_EXTS.length){
+    img.dataset.n = tried+1;
+    img.src = photoUrl(img.dataset.photo, PHOTO_EXTS[(parseInt(img.dataset.start||"0",10)+tried)%PHOTO_EXTS.length]);
+  } else {
+    img.style.display = "none";
+    var fb = img.nextElementSibling;
+    if(fb) fb.style.display = "flex";
+  }
+}, true);
 
 /* ---------- render: language ---------- */
 function applyLang(){
@@ -1066,24 +1190,41 @@ function renderCatTabs(){
 function renderMenu(){
   menuGridEl.innerHTML = "";
   var open = isOpenNow();
+  var activeCat = findCat(state.activeCat);
+  if(activeCat && activeCat.note){
+    catNoteEl.textContent = activeCat.note[state.lang] || activeCat.note.sv;
+    catNoteEl.hidden = false;
+  } else {
+    catNoteEl.hidden = true;
+  }
   var items = MENU.filter(function(m){return m.cat===state.activeCat;});
   items.forEach(function(item){
     var hasOptions = !!item.options;
+    var isInfo = !!item.info;
     var cat = findCat(item.cat);
     var card = document.createElement("div");
     card.className = "dish";
     if(hasOptions) card.dataset.selectedChoice = item.options.choices[0].id;
+    function currentChoice(){
+      return hasOptions ? card.dataset.selectedChoice : null;
+    }
     function currentKey(){
       return hasOptions ? makeCartKey(item.id, card.dataset.selectedChoice) : item.id;
     }
     var qty = state.cart[currentKey()]||0;
     var iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">'+ICONS[cat.icon]+'</svg>';
+    var itemName = item.name[state.lang];
     var mediaHtml;
     if(item.image){
       var imgSrc = "Photos/"+encodeURIComponent(item.image)+".png";
       mediaHtml =
-        '<img src="'+imgSrc+'" alt="'+item.name[state.lang]+'" loading="lazy" '+
+        '<img src="'+imgSrc+'" alt="'+esc(itemName)+'" loading="lazy" '+
         'onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'+
+        '<div class="dish-icon-fallback" style="display:none;">'+iconSvg+'</div>';
+    } else if(item.photo){
+      mediaHtml =
+        '<img src="'+esc(photoUrl(item.photo, PHOTO_EXTS[photoPref]))+'" alt="'+esc(itemName)+'" loading="lazy" '+
+        'data-photo="'+esc(item.photo)+'" data-start="'+photoPref+'" data-n="1">'+
         '<div class="dish-icon-fallback" style="display:none;">'+iconSvg+'</div>';
     } else {
       mediaHtml = '<div class="dish-icon-fallback">'+iconSvg+'</div>';
@@ -1092,33 +1233,48 @@ function renderMenu(){
     var disabledAttr = open ? "" : " disabled";
     var optionsHtml = "";
     if(hasOptions){
+      var basePrice = unitPrice(item, item.options.choices[0].id);
       optionsHtml = '<div class="dish-options" role="group">' +
         item.options.choices.map(function(c, idx){
-          return '<button type="button" class="dish-opt'+(idx===0?" active":"")+'" data-choice="'+c.id+'">'+c.label[state.lang]+'</button>';
+          var delta = (c.price!=null) ? c.price-basePrice : 0;
+          return '<button type="button" class="dish-opt'+(idx===0?" active":"")+'" data-choice="'+c.id+'">'+esc(c.label[state.lang])+(delta>0 ? '<span class="opt-delta">+'+delta+' kr</span>' : '')+'</button>';
         }).join("") +
         '</div>';
     }
+    var tagHtml = "";
+    if(item.oldPrice) tagHtml = '<span class="dish-discount-tag">-20%</span>';
+    else if(item.pop) tagHtml = '<span class="dish-pop-tag">'+esc(t("popular"))+'</span>';
+    var priceHtml = isInfo ? "" :
+      '<span class="dish-price-badge">'+(item.oldPrice ? '<span class="price-old">'+fmt(item.oldPrice)+'</span>' : '')+'<span class="price-now">'+fmt(unitPrice(item, currentChoice()))+'</span></span>';
+    var descText = item.desc ? item.desc[state.lang] : "";
+    var footHtml = isInfo ? "" :
+      '<div class="dish-foot">'+
+        '<div class="stepper">'+
+          '<button type="button" class="qty-minus" aria-label="-"'+disabledAttr+'>\u2212</button>'+
+          '<span class="qty">'+qty+'</span>'+
+          '<button type="button" class="qty-plus" aria-label="+"'+disabledAttr+'>+</button>'+
+        '</div>'+
+        '<button type="button" class="dish-add"'+disabledAttr+'>'+addLabel+'</button>'+
+      '</div>';
     card.innerHTML =
       '<div class="dish-media">'+
         mediaHtml+
-        (item.oldPrice ? '<span class="dish-discount-tag">-20%</span>' : '')+
-        '<span class="dish-price-badge">'+(item.oldPrice ? '<span class="price-old">'+fmt(item.oldPrice)+'</span>' : '')+fmt(item.price)+'</span>'+
+        tagHtml+
+        priceHtml+
       '</div>'+
       '<div class="dish-body">'+
-        '<h3 class="dish-name">'+item.name[state.lang]+'</h3>'+
-        '<p class="dish-desc">'+item.desc[state.lang]+'</p>'+
+        '<h3 class="dish-name">'+(item.feat ? '<span class="dish-star" aria-hidden="true">\u2605</span>' : '')+esc(itemName)+'</h3>'+
+        (descText ? '<p class="dish-desc">'+esc(descText)+'</p>' : '')+
         optionsHtml+
-        '<div class="dish-foot">'+
-          '<div class="stepper">'+
-            '<button type="button" class="qty-minus" aria-label="-"'+disabledAttr+'>\u2212</button>'+
-            '<span class="qty">'+qty+'</span>'+
-            '<button type="button" class="qty-plus" aria-label="+"'+disabledAttr+'>+</button>'+
-          '</div>'+
-          '<button type="button" class="dish-add"'+disabledAttr+'>'+addLabel+'</button>'+
-        '</div>'+
+        footHtml+
       '</div>';
+    if(isInfo){
+      menuGridEl.appendChild(card);
+      return;
+    }
     var qtyEl = card.querySelector(".qty");
     var addBtn = card.querySelector(".dish-add");
+    var priceNowEl = card.querySelector(".price-now");
     function refreshQtyDisplay(){
       qtyEl.textContent = state.cart[currentKey()]||0;
     }
@@ -1129,6 +1285,7 @@ function renderMenu(){
           for(var i=0;i<optButtons.length;i++) optButtons[i].classList.remove("active");
           btn.classList.add("active");
           card.dataset.selectedChoice = btn.getAttribute("data-choice");
+          if(priceNowEl) priceNowEl.textContent = fmt(unitPrice(item, currentChoice()));
           refreshQtyDisplay();
         });
       });
@@ -1223,13 +1380,14 @@ function renderCart(){
       var cat = findCat(item.cat);
       var choiceLabel = getChoiceLabel(item, parsed.choiceId);
       var displayName = item.name[state.lang] + (choiceLabel ? " ("+choiceLabel+")" : "");
+      var unit = unitPrice(item, parsed.choiceId);
       var row = document.createElement("div");
       row.className = "cart-item";
       row.innerHTML =
         '<svg class="cart-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">'+ICONS[cat.icon]+'</svg>'+
         '<div class="cart-item-info">'+
-          '<div class="cart-item-name">'+displayName+'</div>'+
-          '<div class="cart-item-price">'+qty+' \u00d7 '+fmt(item.price)+' = '+fmt(item.price*qty)+'</div>'+
+          '<div class="cart-item-name">'+esc(displayName)+'</div>'+
+          '<div class="cart-item-price">'+qty+' \u00d7 '+fmt(unit)+' = '+fmt(unit*qty)+'</div>'+
         '</div>'+
         '<div class="cart-item-side"><div class="stepper">'+
           '<button type="button" class="ci-minus" aria-label="-">\u2212</button>'+
@@ -1485,7 +1643,7 @@ function renderTicketPayPanel(orderNum, total){
     var choiceLabel = getChoiceLabel(item, parsed.choiceId);
     return {
       name: item.name.sv + (choiceLabel ? " (" + choiceLabel + ")" : ""),
-      price: item.price,
+      price: unitPrice(item, parsed.choiceId),
       quantity: state.cart[key]
     };
   }).filter(Boolean);
@@ -1524,7 +1682,7 @@ function renderTicketPayPanel(orderNum, total){
 /* ---------- ticket modal ---------- */
 
 
-   
+
 function openTicket(){ ticketOverlay.classList.add("open"); document.body.style.overflow="hidden"; }
 function closeTicket(){ ticketOverlay.classList.remove("open"); document.body.style.overflow=""; }
 document.getElementById("ticketCloseBtn").addEventListener("click", closeTicket);
